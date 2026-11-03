@@ -563,6 +563,20 @@ Using $\cos^2(\pi/m) - 1 = -\sin^2(\pi/m)$, the discriminant inside the square r
 \]
 As verified in \texttt{isoradial\_recursion\_terminates\_beyond\_rmax}, for any fixed angular subdivision $m$, once $r_j \sin(\pi/m) > \delta$ (which occurs around $r^{\delta}_{\text{max}} \approx \delta / \sin(\pi/m) \approx 2/\delta$), the discriminant becomes strictly negative and the recursion terminates unless the angular subdivision $m$ is dyadically doubled at carefully chosen moduli $\{r_k\}$. Whether such an infinite dyadic doubling schedule can preserve isoradiality and the starlike property simultaneously remains open and is formalized alongside the continuum limit Question \ref{question} in \href{https://github.com/aanderson3456/MyLean4Code/blob/main/ComplexAnalysis/SlitHarmonicMeasure.lean}{\texttt{SlitHarmonicMeasure.lean}}.
 
+\subsection*{4. The Chelkak--Smirnov \& Beurling--Nevanlinna Continuum Bridge}
+
+To pass from the discrete channel harmonic measure inequality (\ref{channel_monotone}) to the continuum inequality $\omega(0; \partial C_k; \varOmega) \le \omega(0; \partial C_{k+1}; \varOmega)$ without requiring an infinite polar isoradial graph (Question \ref{spandrel}), Section 6 of \texttt{SlitHarmonicMeasure.lean} formalizes a four-part bridge:
+\begin{enumerate}
+\item \textbf{Rotational First-Exit Reduction (\texttt{rotational\_annular\_entry\_monotonicity}):}
+Since the slits $S_k = \{r e^{\pm i\theta_k} : r \ge 1\}$ begin on the unit circle, any inner disk $\D_{r_0} = \{|z| \le r_0\}$ ($0 < r_0 < 1$) is completely unslitted. By rotational symmetry, the first-exit distribution from $0$ onto the ring $|v| = r_0$ is strictly uniform ($1/m$ per ray), reducing the problem to the annular domain $r_0 \le |z| \le R$ and bypassing the polar mesh degeneracy at $z = 0$.
+\item \textbf{Annular Bounded-Angles Window (\texttt{annular\_bap\_window\_invariant}):}
+On any compact annulus $r_0 \le r_j \le R < r^{\delta}_{\text{max}}$, the rhombic half-angle parameter $r_j^2 \sin^2(\pi/m)$ is sandwiched inside $[r_0^2 \sin^2(\pi/m), R^2 \sin^2(\pi/m)] \subset (0, \delta^2)$, satisfying the Chelkak--Smirnov Bounded-Angles Property \cite[Sec.~2.1]{CS}.
+\item \textbf{Two-Stage Error Transfer (\texttt{chelkak\_smirnov\_beurling\_two\_stage\_bridge}):}
+Taking $\delta \to 0$ first at a fixed truncation radius $R$ transfers discrete monotonicity to the truncated domain $\varOmega_R = \varOmega \cap B(0,R)$ within Chelkak--Smirnov error $2\eps_{\delta}$ \cite[Thm.~3.12]{CS}, and taking $R \to \infty$ next bounds the outer-circle escape probability by the Beurling--Nevanlinna projection error $2\eta_R = O(R^{-1/2})$.
+\item \textbf{Archimedean Order Preservation (\texttt{continuum\_channel\_monotonicity\_via\_chelkak\_smirnov\_bridge}):}
+Chains the discrete ray-dominance proof (\texttt{discrete\_channel\_harmonic\_measure\_monotone}), the two-stage error transfer, and the Archimedean magnification lemma (\texttt{archimedean\_continuum\_limit\_order\_preservation}) to deduce $\omega_k \le \omega_{k+1}$.
+\end{enumerate}
+
 \begin{thebibliography}{99}
 
 \bibitem{CS} D.~Chelkak and S.~Smirnov, {\em Discrete complex analysis on isoradial graphs}, Adv. Math 228 (2011), 1590--1630.
