@@ -69,8 +69,6 @@
 \date{\today}
 
 \author[A. Anderson]{Austin Anderson}
-\address{Department of Mathematics, University of Hawaii, Honolulu, Hawaii 96822}
-\email{austina@hawaii.edu}
 
 
 
@@ -485,15 +483,11 @@ We conjecture the answer is no, mostly because we failed to produce one.  If $N(
 
 In 2026, the discrete Kakutani--Markov monotonicity proofs of Section 2 (Lemma \ref{lem_interior}, Lemma \ref{lem_slit}, and the channel harmonic measure monotonicity inequality (\ref{channel_monotone})), together with the isoradial discriminant termination bound for (\ref{rmoduli}) and the formal specifications of Question \ref{question} and Question \ref{spandrel}, were formalized and machine-verified in the \textbf{Lean 4} interactive theorem prover.
 
-\subsection*{Public Code \& Interactive Verification Links}
+\subsection*{Public Lean 4 Repository}
 \begin{itemize}
-\item \textbf{GitHub Lean 4 Repository:}
+\item \textbf{GitHub Lean 4 Formalization:}
 \begin{center}
 {\footnotesize \url{https://github.com/aanderson3456/MyLean4Code/blob/main/ComplexAnalysis/SlitHarmonicMeasure.lean}}
-\end{center}
-\item \textbf{Interactive Lean 4 Sandbox (\texttt{10-Dan NewMillenniums}, Theorems \#521--\#523):}
-\begin{center}
-{\footnotesize \url{https://mathgod.org/learn}}
 \end{center}
 \end{itemize}
 
@@ -508,7 +502,7 @@ To capture both the rotational symmetry (\ref{M1}) and the boundary absorption e
 \[
 m_{l,k} \le m_{l,k+1}.
 \]
-Similarly, under the intrachannel reflection $\ell \mapsto n_{k+1} - \ell + 1$, the left and right transition weights swap ($m_r$ pairs with $p_{l,\text{refl}}$ and $m_{l,k} \le m_{r,\text{refl}}$ pairs with $p_{r,\text{refl}}$). The single-step theorem \texttt{discrete\_isoradial\_markov\_monotonicity\_verified} (Theorem \#523 on MathGod.org) and full time-induction theorem \texttt{lemma\_2\_1\_full\_induction} verify Lemma \ref{lem_interior} purely constructively:
+Similarly, under the intrachannel reflection $\ell \mapsto n_{k+1} - \ell + 1$, the left and right transition weights swap ($m_r$ pairs with $p_{l,\text{refl}}$ and $m_{l,k} \le m_{r,\text{refl}}$ pairs with $p_{r,\text{refl}}$). The single-step theorem \texttt{discrete\_isoradial\_markov\_monotonicity\_verified} and full time-induction theorem \texttt{lemma\_2\_1\_full\_induction} verify Lemma \ref{lem_interior} purely constructively:
 
 {\small
 \begin{verbatim}
@@ -567,7 +561,7 @@ Using $\cos^2(\pi/m) - 1 = -\sin^2(\pi/m)$, the discriminant inside the square r
 \[
 (r_j\cos(\pi/m))^2 - r_j^2 + \delta^2 = \delta^2 - r_j^2 \sin^2(\pi/m).
 \]
-As verified in \texttt{isoradial\_recursion\_terminates\_beyond\_rmax}, for any fixed angular subdivision $m$, once $r_j \sin(\pi/m) > \delta$ (which occurs around $r^{\delta}_{\text{max}} \approx \delta / \sin(\pi/m) \approx 2/\delta$), the discriminant becomes strictly negative and the recursion terminates unless the angular subdivision $m$ is dyadically doubled at carefully chosen moduli $\{r_k\}$. Whether such an infinite dyadic doubling schedule can preserve isoradiality and the starlike property simultaneously remains open and is formalized as Theorem \#522, alongside the continuum limit Question \ref{question} as Theorem \#521, in \href{https://github.com/aanderson3456/MyLean4Code/blob/main/ComplexAnalysis/SlitHarmonicMeasure.lean}{\texttt{SlitHarmonicMeasure.lean}}.
+As verified in \texttt{isoradial\_recursion\_terminates\_beyond\_rmax}, for any fixed angular subdivision $m$, once $r_j \sin(\pi/m) > \delta$ (which occurs around $r^{\delta}_{\text{max}} \approx \delta / \sin(\pi/m) \approx 2/\delta$), the discriminant becomes strictly negative and the recursion terminates unless the angular subdivision $m$ is dyadically doubled at carefully chosen moduli $\{r_k\}$. Whether such an infinite dyadic doubling schedule can preserve isoradiality and the starlike property simultaneously remains open and is formalized alongside the continuum limit Question \ref{question} in \href{https://github.com/aanderson3456/MyLean4Code/blob/main/ComplexAnalysis/SlitHarmonicMeasure.lean}{\texttt{SlitHarmonicMeasure.lean}}.
 
 \begin{thebibliography}{99}
 
