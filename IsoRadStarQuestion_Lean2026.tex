@@ -480,60 +480,47 @@ We conjecture the answer is no, mostly because we failed to produce one.  If $N(
 \newpage
 
 \section{Formal Verification in Lean 4 (2026 Update)}
+\sloppy
 
-In 2026, the discrete Kakutani--Markov monotonicity proofs of Section 2 (Lemma \ref{lem_interior}, Lemma \ref{lem_slit}, and the channel harmonic measure monotonicity inequality (\ref{channel_monotone})), together with the isoradial discriminant termination bound for (\ref{rmoduli}) and the formal specifications of Question \ref{question} and Question \ref{spandrel}, were formalized and machine-verified in the \textbf{Lean 4} interactive theorem prover.
+In 2026, the discrete Kakutani--Markov monotonicity proofs of Section 2 (Lemma \ref{lem_interior}, Lemma \ref{lem_slit}, and the channel harmonic measure monotonicity inequality (\ref{channel_monotone})), the analytic starlike and Herglotz--Pommerenke theory of Section 1 (\ref{f}), the exact trigonometric discriminant identity for (\ref{rmoduli}), and the $\eps$-$\delta$ continuum reduction from discrete to continuum channel monotonicity were formalized and machine-verified in the \textbf{Lean 4} interactive theorem prover.
 
-\subsection*{Public Lean 4 Repository}
+\subsection*{Public Lean 4 Repositories}
 \begin{itemize}
-\item \textbf{GitHub Lean 4 Formalization:}
+\item \textbf{Slit Harmonic Measure \& Isoradial Discretization (\texttt{SlitHarmonicMeasure.lean}):}
 \begin{center}
 {\footnotesize \url{https://github.com/aanderson3456/MyLean4Code/blob/main/ComplexAnalysis/SlitHarmonicMeasure.lean}}
 \end{center}
+\item \textbf{Polar-Angle Starlike Domains \& Herglotz--Pommerenke Theory (\texttt{Sarason/Chapter3.lean}):}
+\begin{center}
+{\footnotesize \url{https://github.com/aanderson3456/MyLean4Code/blob/main/ComplexAnalysis/Sarason/Chapter3.lean}}
+\end{center}
 \end{itemize}
 
-\subsection*{1. Formalization of Lemma \ref{lem_interior} (Interior Channel Monotonicity)}
+\subsection*{1. Real-Valued Formalization of Lemma \ref{lem_interior} (Interior Channel Monotonicity)}
 
-In the Lean 4 formalization, the 4-neighbor Markov transition operator (\ref{angles}) at any interior vertex $v \neq 0$ is encoded via the bilinear transition step
+In Sections 8--10 of \texttt{SlitHarmonicMeasure.lean}, the 4-neighbor Markov transition operator (\ref{angles}) with Chelkak--Smirnov tangent weights $\texttt{isoradialTangentWeight}(\theta_k, \theta_{\text{sum}}) = \tan\theta_k / \theta_{\text{sum}}$ is formalized over $\R$ via the bilinear transition step
 \[
-\texttt{markovFourTermStep}(m_l, m_r, m_u, m_d, p_l, p_r, p_u, p_d)
+\texttt{markovFourTermStep\_R}(m_l, m_r, m_u, m_d, p_l, p_r, p_u, p_d)
 = m_l p_l + m_r p_r + m_u p_u + m_d p_d.
 \]
-To capture both the rotational symmetry (\ref{M1}) and the boundary absorption exception when $n_{k+1} > n_k = \ell$ and $a = l$ (where the left neighbor of $v^{\delta}_{k,n_k}$ lies on the absorbing slit boundary $(S_k)_{\Omega^{\delta}}$, forcing $m_{l,k} = 0 \le m_{l,k+1}$, whereas $m_{l,k} = m_{l,k+1}$ at all interior positions), the hypothesis is unified into the single non-strict weight inequality
-\[
-m_{l,k} \le m_{l,k+1}.
-\]
-Similarly, under the intrachannel reflection $\ell \mapsto n_{k+1} - \ell + 1$, the left and right transition weights swap ($m_r$ pairs with $p_{l,\text{refl}}$ and $m_{l,k} \le m_{r,\text{refl}}$ pairs with $p_{r,\text{refl}}$). The single-step theorem \texttt{discrete\_isoradial\_markov\_monotonicity\_verified} and full time-induction theorem \texttt{lemma\_2\_1\_full\_induction} verify Lemma \ref{lem_interior} purely constructively:
+To capture both the rotational symmetry (\ref{M1}) and the boundary absorption exception when $n_{k+1} > n_k = \ell$ and $a = l$ (where the left neighbor of $v^{\delta}_{k,n_k}$ lies on the absorbing slit boundary $(S_k)_{\Omega^{\delta}}$, forcing $m_{l,k} = 0 \le m_{l,k+1}$, whereas $m_{l,k} = m_{l,k+1}$ at all interior positions), the weight hypothesis is unified into $0 \le m_{l,k} \le m_{l,k+1}$. Similarly, under the intrachannel reflection $\ell \mapsto n_{k+1} - \ell + 1$, the left and right transition weights swap ($0 \le m_{l,k} \le m_{r,\text{refl}}$). The theorems \texttt{lemma\_2\_1\_direct\_step\_R}, \texttt{lemma\_2\_1\_reflected\_step\_R}, and the full time-induction theorem \texttt{lemma\_2\_1\_full\_induction\_R} machine-verify Lemma \ref{lem_interior} over $\R$ for all $t \in \N$:
 
 {\small
 \begin{verbatim}
-def markovFourTermStep (ml mr mu md pl pr pu pd : Nat) : Nat :=
+def markovFourTermStep_R (ml mr mu md pl pr pu pd : R) : R :=
   ml * pl + mr * pr + mu * pu + md * pd
 
-theorem discrete_isoradial_markov_monotonicity_verified
-    (ml_k ml_k1 mr mu md : Nat)
-    (pl_k pr_k pu_k pd_k : Nat)
-    (pl_direct pr_direct pu_direct pd_direct : Nat)
-    (pr_refl pl_refl pu_refl pd_refl : Nat)
-    (hBoundaryL : ml_k <= ml_k1)
-    (hDirectL : pl_k <= pl_direct) (hDirectR : pr_k <= pr_direct)
-    (hDirectU : pu_k <= pu_direct) (hDirectD : pd_k <= pd_direct)
-    (hReflL : pl_k <= pr_refl)     (hReflR : pr_k <= pl_refl)
-    (hReflU : pu_k <= pu_refl)     (hReflD : pd_k <= pd_refl) :
-    markovFourTermStep ml_k mr mu md pl_k pr_k pu_k pd_k <=
-      markovFourTermStep ml_k1 mr mu md
-        pl_direct pr_direct pu_direct pd_direct /\
-    markovFourTermStep ml_k mr mu md pl_k pr_k pu_k pd_k <=
-      markovFourTermStep ml_k1 mr mu md
-        pr_refl pl_refl pu_refl pd_refl
+theorem lemma_2_1_full_induction_R (W : CoupledChannelWalk_R) (t : N) :
+    probChannelK_R W t <=
+      min (probChannelDirect_R W t) (probChannelRefl_R W t)
 \end{verbatim}
 }
-By coupling the base case $\mathbf{P}(RW(0) = v^{\delta}_{k,\ell}) = 0$ (since $RW(0) = 0$ at the origin while channel vertices satisfy $|v| \ge |\gamma^{\delta}_k| > 0$) with this 4-term inductive step inside the structure \texttt{CoupledChannelWalk}, the theorem \texttt{lemma\_2\_1\_full\_induction} proves that for all $t \in \N$,
+Starting from the base case $\mathbf{P}(RW(0) = v^{\delta}_{k,\ell}) = 0$ (since $RW(0) = 0$ at the origin while channel vertices satisfy $|v| \ge |\gamma^{\delta}_k| > 0$), \texttt{lemma\_2\_1\_full\_induction\_R} establishes that for every time step $t \in \N$,
 \begin{align*}
-\mathbf{P}(RW(t) = v^{\delta}_{k,\ell}) &\le \mathbf{P}(RW(t) = v^{\delta}_{k+1,\ell}), \\
-\mathbf{P}(RW(t) = v^{\delta}_{k,\ell}) &\le \mathbf{P}(RW(t) = v^{\delta}_{k+1,n_{k+1}-\ell+1}).
+\mathbf{P}(RW(t) = v^{\delta}_{k,\ell}) &\le \min\bigl(\mathbf{P}(RW(t) = v^{\delta}_{k+1,\ell}),\, \mathbf{P}(RW(t) = v^{\delta}_{k+1,n_{k+1}-\ell+1})\bigr).
 \end{align*}
 
-\subsection*{2. Formalization of Lemma \ref{lem_slit} \& Equation (\ref{channel_monotone})}
+\subsection*{2. Real-Valued Formalization of Lemma \ref{lem_slit} \& Equation (\ref{channel_monotone})}
 
 Specializing Lemma \ref{lem_interior} to $\ell = 1$ yields both neighbor inequalities required at the slit vertices $\gamma^{\delta}_k$ and $\gamma^{\delta}_{k+1}$:
 \begin{enumerate}
@@ -546,40 +533,74 @@ Specializing Lemma \ref{lem_interior} to $\ell = 1$ yields both neighbor inequal
 \mathbf{P}(RW(t) = v^{\delta}_{k, 1}) \le \mathbf{P}(RW(t) = v^{\delta}_{k+1, 1}).
 \]
 \end{enumerate}
-Feeding these two inequalities into \texttt{lemma\_2\_2\_slit\_boundary\_monotonicity} immediately verifies Lemma \ref{lem_slit}:
+Feeding these two inequalities into \texttt{lemma\_2\_2\_slit\_boundary\_monotonicity\_R} verifies Lemma \ref{lem_slit} over $\R$:
 \[
 \mathbf{P}(RW(t+1) = \gamma^{\delta}_k) \le \mathbf{P}(RW(t+1) = \gamma^{\delta}_{k+1}).
 \]
-Finally, since $n_k^{\delta} \le n_{k+1}^{\delta}$, the boundary rays of channel $(C_k)_{\Omega^{\delta}}$ embed into the boundary rays of $(C_{k+1})_{\Omega^{\delta}}$ with pointwise dominance (\texttt{InductiveListDominates}), and structural induction (\texttt{discrete\_channel\_harmonic\_measure\_monotone}) establishes Equation (\ref{channel_monotone}):
+For the discrete channel widths $n_k^{\delta} = \lfloor \Delta\theta_k / \delta^2 \rfloor_{\N}$ (\texttt{discreteChannelWidth\_delta}), the theorem \texttt{discreteChannelWidth\_delta\_monotone} proves that monotone continuum channel opening angles $\Delta\theta_k \le \Delta\theta_{k+1}$ imply $n_k^{\delta} \le n_{k+1}^{\delta}$ for every mesh parameter $\delta \in \R$. Summing the non-negative absorbed boundary hitting probabilities over $\ell \in \{1, \dots, n_k^{\delta}\} \subseteq \{1, \dots, n_{k+1}^{\delta}\}$ via \texttt{discrete\_channel\_harmonic\_measure\_monotone\_R} establishes Equation (\ref{channel_monotone}) over $\R$:
 \[
-\omega^{\delta}(0 ; \partial (C_k)_{\Omega^{\delta}}; \varOmega^{\delta}_{\varGamma}) \le \omega^{\delta}(0 ; \partial (C_{k+1})_{\Omega^{\delta}}; \varOmega^{\delta}_{\varGamma}).
+\omega^{\delta}(0 ; \partial (C_k)_{\Omega^{\delta}}; \varOmega^{\delta}_{\varGamma})
+= \sum_{\ell=1}^{n_k^{\delta}} p_{k,\ell}
+\le \sum_{\ell=1}^{n_{k+1}^{\delta}} p_{k+1,\ell}
+= \omega^{\delta}(0 ; \partial (C_{k+1})_{\Omega^{\delta}}; \varOmega^{\delta}_{\varGamma}).
 \]
 
-\subsection*{3. Isoradial Discriminant Termination \& Open Continuum / Spandrel Challenges}
+\subsection*{3. Polar-Angle Starlike Theory \& Herglotz--Pommerenke Slit Maps (\texttt{\_eps})}
 
-Using $\cos^2(\pi/m) - 1 = -\sin^2(\pi/m)$, the discriminant inside the square root of the isoradial modulus recursion (\ref{rmoduli}) simplifies to
-\[
-(r_j\cos(\pi/m))^2 - r_j^2 + \delta^2 = \delta^2 - r_j^2 \sin^2(\pi/m).
-\]
-As verified in \texttt{isoradial\_recursion\_terminates\_beyond\_rmax}, for any fixed angular subdivision $m$, once $r_j \sin(\pi/m) > \delta$ (which occurs around $r^{\delta}_{\text{max}} \approx \delta / \sin(\pi/m) \approx 2/\delta$), the discriminant becomes strictly negative and the recursion terminates unless the angular subdivision $m$ is dyadically doubled at carefully chosen moduli $\{r_k\}$. Whether such an infinite dyadic doubling schedule can preserve isoradiality and the starlike property simultaneously remains open and is formalized alongside the continuum limit Question \ref{question} in \href{https://github.com/aanderson3456/MyLean4Code/blob/main/ComplexAnalysis/SlitHarmonicMeasure.lean}{\texttt{SlitHarmonicMeasure.lean}}.
-
-\subsection*{4. The Chelkak--Smirnov \& Beurling--Nevanlinna Continuum Bridge}
-
-To pass from the discrete channel harmonic measure inequality (\ref{channel_monotone}) to the continuum inequality $\omega(0; \partial C_k; \varOmega) \le \omega(0; \partial C_{k+1}; \varOmega)$ without requiring an infinite polar isoradial graph (Question \ref{spandrel}), Section 6 of \texttt{SlitHarmonicMeasure.lean} formalizes a four-part bridge:
+In \texttt{Sarason/Chapter3.lean} (\S III.13) and \texttt{SlitHarmonicMeasure.lean} (\S 8--\S 9), the analytic framework of Section 1 is formalized in terms of polar coordinates $\texttt{polarPoint}(r,\theta) = r(\cos\theta + i\sin\theta)$ and Weierstrass $\eps$-$\delta$ complex differentiability (\texttt{HasDerivAt\_eps}, \texttt{HolomorphicOn\_eps}):
 \begin{enumerate}
-\item \textbf{Rotational First-Exit Reduction (\texttt{rotational\_annular\_entry\_monotonicity}):}
-Since the slits $S_k = \{r e^{\pm i\theta_k} : r \ge 1\}$ begin on the unit circle, any inner disk $\D_{r_0} = \{|z| \le r_0\}$ ($0 < r_0 < 1$) is completely unslitted. By rotational symmetry, the first-exit distribution from $0$ onto the ring $|v| = r_0$ is strictly uniform ($1/m$ per ray), reducing the problem to the annular domain $r_0 \le |z| \le R$ and bypassing the polar mesh degeneracy at $z = 0$.
-\item \textbf{Annular Bounded-Angles Window (\texttt{annular\_bap\_window\_invariant}):}
-On any compact annulus $r_0 \le r_j \le R < r^{\delta}_{\text{max}}$, the rhombic half-angle parameter $r_j^2 \sin^2(\pi/m)$ is sandwiched inside $[r_0^2 \sin^2(\pi/m), R^2 \sin^2(\pi/m)] \subset (0, \delta^2)$, satisfying the Chelkak--Smirnov Bounded-Angles Property \cite[Sec.~2.1]{CS}.
-\item \textbf{Two-Stage Error Transfer (\texttt{chelkak\_smirnov\_beurling\_two\_stage\_bridge}):}
-Taking $\delta \to 0$ first at a fixed truncation radius $R$ transfers discrete monotonicity to the truncated domain $\varOmega_R = \varOmega \cap B(0,R)$ within Chelkak--Smirnov error $2\eps_{\delta}$ \cite[Thm.~3.12]{CS}, and taking $R \to \infty$ next bounds the outer-circle escape probability by the Beurling--Nevanlinna projection error $2\eta_R = O(R^{-1/2})$.
-\item \textbf{Archimedean Order Preservation (\texttt{continuum\_channel\_monotonicity\_via\_chelkak\_smirnov\_bridge}):}
-Chains the discrete ray-dominance proof (\texttt{discrete\_channel\_harmonic\_measure\_monotone}), the two-stage error transfer, and the Archimedean magnification lemma (\texttt{archimedean\_continuum\_limit\_order\_preservation}) to deduce $\omega_k \le \omega_{k+1}$.
+\item \textbf{Starlike Slit Domains (\texttt{slitDomain\_Omega\_isStarlike\_theta}):}
+Proves that the slitted domain $\varOmega = \C \setminus \bigcup_{k=0}^N S_k$ is starlike with respect to the origin in the polar-angle sense (\texttt{IsStarlikeDomain\_theta}), i.e., if $\texttt{polarPoint}(r,\theta) \in \varOmega$ and $0 \le t \le 1$, then $\texttt{polarPoint}(tr,\theta) \in \varOmega$.
+\item \textbf{Logarithmic Derivative Characterization (\texttt{isStarlikeOnDisk\_theta\_eps\_iff\_logDeriv\_eps}):}
+Proves $\frac{\partial}{\partial\theta}\arg f(re^{i\theta}) = \re\!\left(\frac{zf'(z)}{f(z)}\right)$, establishing that an analytic map $f$ on $\D$ is starlike in $\theta$ if and only if $\re\!\left(\frac{zf'(z)}{f(z)}\right) > 0$ on $\D \setminus \{0\}$.
+\item \textbf{Herglotz--Pommerenke Logarithmic Derivative (\texttt{pommerenkeLogDeriv}):}
+For the slit Riemann map (\ref{f}), the logarithmic derivative
+\[
+\frac{z f'(z)}{f(z)} = \sum_{j=1}^{2n} \frac{\sigma_j}{2}\frac{z_j + z}{z_j - z}
+\]
+is proved to be holomorphic on $\D$ in the Weierstrass $\eps$-$\delta$ sense (\texttt{pommerenkeLogDeriv\_holomorphicOn\_eps}), to have strictly positive real part on $\D$ (\texttt{pommerenkeLogDeriv\_re\_pos\_on\_disk}), to have vanishing real part on $\partial\D \setminus \{z_j\}$ (\texttt{pommerenkeLogDeriv\_re\_zero\_on\_circle}), and to satisfy the exact boundary cotangent identity on $\partial\D$ (\texttt{pommerenkeLogDeriv\_unitCircle\_eq}):
+\[
+\sum_{j=1}^{2n} \frac{\sigma_j}{2}\frac{e^{i\phi_j} + e^{it}}{e^{i\phi_j} - e^{it}}
+= i \sum_{j=1}^{2n} \frac{\sigma_j}{2}\frac{\sin(t - \phi_j)}{1 - \cos(t - \phi_j)}.
+\]
+In particular, at a slit-tip preimage $e^{it_k} \in \partial\D$, $f'(e^{it_k}) = 0$ if and only if the boundary cotangent sum vanishes (\texttt{pommerenkeLogDeriv\_eq\_zero\_on\_circle\_iff\_cotangentSum\_eq\_zero}).
 \end{enumerate}
+
+\subsection*{4. Chelkak--Smirnov Discrete Mean Value Theorem, Laplacian Consistency with \texttt{IsRealHarmonicOn\_eps}, and Analytic--Discrete Proof Transfer}
+
+In Section 11 of \texttt{SlitHarmonicMeasure.lean}, the internal discrete complex analysis of Chelkak and Smirnov \cite[Secs.~2.1--2.2 \& Sec.~3]{CS} linking the discrete random walk on $\varGamma^{\delta}$ to the continuum Mean Value Property and Laplacian is formalized:
+\begin{enumerate}
+\item \textbf{Dual-Circle Telescoping \& Exact First-Order Cancellation (\texttt{IsoradialVertexStar}, \texttt{isoradialStar\_weighted\_displacement\_sum\_eq\_zero}):}
+At each interior vertex $v \in \C$, every primal edge $u_k - v$ is orthogonal to the dual circumcenter chord $w_k - w_{k-1}$ ($|w_k - v| = \delta$) via $(\tan\theta_k)(u_k - v) = -i(w_k - w_{k-1})$. Summing around the closed dual cycle $\sum_{k=1}^d (w_k - w_{k-1}) = 0$ yields
+\[
+\sum_{k=1}^d \tan\theta_k\,(u_k - v) = 0, \qquad
+\sum_{k=1}^d \tan\theta_k\,(u_k - v).\re = 0, \qquad
+\sum_{k=1}^d \tan\theta_k\,(u_k - v).\im = 0.
+\]
+\item \textbf{Discrete Laplacian $\Delta^{\delta}$ $\iff$ Discrete Mean Value Theorem (\texttt{isDiscreteHarmonicAt\_iff\_meanValueProperty}, \texttt{affine\_isDiscreteHarmonicAt}):}
+For the Chelkak--Smirnov discrete Laplacian $(\Delta^{\delta} H)(v) = \frac{1}{\mu_{\varGamma}(v)}\sum_{k=1}^d \tan\theta_k\,(H(u_k) - H(v))$ with $\mu_{\varGamma}(v) = \frac{1}{4}\sum_{k=1}^d \tan\theta_k\,\|u_k - v\|^2$, the theorem \texttt{isDiscreteHarmonicAt\_iff\_meanValueProperty} proves
+\[
+(\Delta^{\delta} H)(v) = 0 \iff H(v) = \sum_{k=1}^d \left(\frac{\tan\theta_k}{\sum_{j=1}^d \tan\theta_j}\right) H(u_k) = (M^{\delta} H)(v).
+\]
+In particular, all real affine functions $H(z) = a\re z + b\im z + c$ are exactly discrete harmonic (\texttt{affine\_isDiscreteHarmonicAt}).
+\item \textbf{Second-Order Laplacian Consistency with \texttt{IsRealHarmonicOn\_eps} (\texttt{isoradialDiscreteLaplacian\_secondOrderTaylorAt}, \texttt{isRealHarmonicOn\_eps\_imp\_discreteMeanValue\_and\_remainder}):}
+On any quadratically balanced star ($\sum_{k=1}^d \tan\theta_k\,(u_k - v)^2 = 0$), the discrete Laplacian of a second-order Taylor polynomial $T_2(z)$ at $v$ equals the exact continuum Laplacian $h_{xx} + h_{yy}$. When $h$ satisfies \texttt{IsRealHarmonicOn\_eps} ($h_{xx} + h_{yy} = 0$), its second-order Taylor jet $T_2$ satisfies the exact Discrete Mean Value Property $T_2(v) = (M^{\delta} T_2)(v)$ and $(\Delta^{\delta} h)(v) = \Delta^{\delta}(h - T_2)(v) \to 0$ as $\delta \to 0$ (\texttt{isRealHarmonicOn\_eps\_imp\_discreteLaplacian\_tendsto\_zero\_eps}).
+\item \textbf{Discrete Maximum Principle \& Analytic--Discrete Proof Transfer (\texttt{isoradial\_local\_maximum\_principle}, \texttt{chelkak\_smirnov\_convergence\_hasLimitAt\_eps}, \texttt{chelkak\_smirnov\_analytic\_discrete\_transfer\_eps}):}
+Proves the local discrete maximum principle, establishes Weierstrass \texttt{HasLimitAt\_eps} convergence $H^{\delta}(v) \to h(v)$ from the boundary and Laplacian consistency errors, and chains with \texttt{analytic\_truncated\_channel\_monotone\_of\_hasLimitAt\_eps} ($\delta \to 0$) and \texttt{analytic\_monotone\_channel\_of\_hasLimitAtInf\_eps} ($\|w\| \to \infty$) to transfer discrete random-walk monotonicity to the continuum (\texttt{monotoneChannelStatement\_eps\_proven}).
+\end{enumerate}
+
+\medskip
+\noindent\textbf{Unconditional vs.\ Conditional Status:}
+\begin{itemize}
+\item \textbf{Unconditionally Verified in Lean 4:}
+The 4-term Markov transition inequalities (Lemmas \ref{lem_interior} and \ref{lem_slit}) under coupled neighbor dominance (\texttt{CoupledChannelWalk\_R}), the monotonicity of discrete channel widths $n_k^{\delta} \le n_{k+1}^{\delta}$ and discrete channel harmonic measures (\ref{channel_monotone}) over $\R$, the trigonometric identity $(r_j\cos(\pi/m))^2 - r_j^2 + \delta^2 = \delta^2 - r_j^2\sin^2(\pi/m)$ (\texttt{isoradial\_discriminant\_identity}), the starlike and Herglotz--Pommerenke complex analysis theorems in \texttt{Sarason/Chapter3.lean}, the Chelkak--Smirnov dual-circle telescoping, Discrete Mean Value Theorem, second-order Laplacian consistency with \texttt{IsRealHarmonicOn\_eps}, local discrete maximum principle, and the $\eps$-$\delta$ analytic--discrete proof transfer theorems (\texttt{chelkak\_smirnov\_analytic\_discrete\_transfer\_eps}, \texttt{analytic\_truncated\_channel\_monotone\_of\_hasLimitAt\_eps}, and \texttt{analytic\_monotone\_channel\_of\_hasLimitAtInf\_eps}) are all proved unconditionally with zero axioms or \texttt{sorry}s.
+\item \textbf{Remaining Conditional Hypotheses for Question \ref{question} and Question \ref{spandrel}:}
+A complete unconditional resolution of Question \ref{question} from first principles still requires: (i) discharging the global neighbor coupling across the unslitted inner disk $|v| < 1$ where rays $\arg \gamma_k^{\delta}$ are interior rather than absorbing, (ii) discharging the global green-function / Beurling--Nevanlinna truncation error estimates on $\varOmega_R$, and (iii) bridging channel monotonicity $\omega(0; \partial C_k; \varOmega) \le \omega(0; \partial C_{k+1}; \varOmega)$ (which pairs the upper bank of slit $k$ with the lower bank of slit $k+1$) to single-slit monotonicity $\omega_k = \omega(0; R_k^-; \varOmega) + \omega(0; R_k^+; \varOmega)$ and its converse under equal starting moduli $\rho_k = \rho_j$. Likewise, Question \ref{spandrel} (\texttt{Question\_2\_3\_Spandrel}) remains an open problem.
+\end{itemize}
 
 \begin{thebibliography}{99}
 
-\bibitem{CS} D.~Chelkak and S.~Smirnov, {\em Discrete complex analysis on isoradial graphs}, Adv. Math 228 (2011), 1590--1630.
+\bibitem{CS} D.~Chelkak (\url{https://www-personal.umich.edu/~chelkak/}) and S.~Smirnov (\url{http://www.unige.ch/~smirnov/}), {\em Discrete complex analysis on isoradial graphs}, Adv.\ Math.\ \textbf{228} (2011), no.~3, 1590--1630 (\href{https://doi.org/10.1016/j.aim.2011.06.025}{doi:10.1016/j.aim.2011.06.025}, \href{https://arxiv.org/abs/0810.2188}{arXiv:0810.2188}).
 
 
 \bibitem{Pom} Ch.~Pommerenke, {\em Boundary Behavior of Conformal Maps\/},
